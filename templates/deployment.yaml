@@ -27,7 +27,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/entrypoint.sh"]
-          args: ["--api={{ .Values.pdns.api.enabled }}", "--api-key={{ .Values.pdns.api.key }}", "--webserver=yes", "--webserver-port=8081", "--webserver-address=0.0.0.0", "--webserver-allow-from={{ .Values.pdns.webserver.allowFrom }}", "--slave=yes", "--dnsupdate={{ .Values.pdns.dnsupdate.enabled }}"]
+          args: ["--api={{ .Values.pdns.api.enabled }}", "--api-key={{ .Values.pdns.api.key }}", "--webserver=yes", "--webserver-port=8081", "--webserver-address=0.0.0.0", "--webserver-allow-from={{ .Values.pdns.webserver.allowFrom }}", "--slave=yes", "--dnsupdate={{ .Values.pdns.dnsupdate.enabled }}", "--local-port=5300"]
           env:
               - name: MYSQL_HOST
                 value: {{ template "mariadb.fullname" . }}
@@ -39,12 +39,6 @@ spec:
               - name: MYSQL_DB
                 value: {{ .Values.mariadb.mariadbDatabase | quote }}
           ports:
-            - name: dns-udp
-              containerPort: 53
-              protocol: UDP
-            - name: dns-tcp
-              containerPort: 53
-              protocol: TCP
             - name: api
               containerPort: 8081
               protocol: TCP
@@ -56,6 +50,21 @@ spec:
             httpGet:
               path: /
               port: api
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+        - name: {{ .Chart.Name }}-recursor
+          image: pschiffe/pdns-recursor
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+              - name: PDNS_forward_zones
+                value: "cluster.local=127.0.0.1:5300"
+          ports:
+            - name: dns-udp
+              containerPort: 53
+              protocol: UDP
+            - name: dns-tcp
+              containerPort: 53
+              protocol: TCP
           resources:
 {{ toYaml .Values.resources | indent 12 }}
     {{- with .Values.nodeSelector }}
