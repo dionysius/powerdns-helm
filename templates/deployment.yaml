@@ -58,6 +58,8 @@ spec:
           env:
               - name: PDNS_forward_zones
                 value: "cluster.local=127.0.0.1:5300"
+              - name: PDNS_packetcache_ttl
+                value: "15"
           ports:
             - name: dns-udp
               containerPort: 53
