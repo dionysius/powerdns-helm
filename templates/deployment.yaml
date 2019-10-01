@@ -27,7 +27,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/entrypoint.sh"]
-          args: ["--api={{ .Values.pdns.api.enabled }}", "--api-key={{ .Values.pdns.api.key }}", "--webserver=yes", "--webserver-port=8081", "--webserver-address=0.0.0.0", "--webserver-allow-from={{ .Values.pdns.webserver.allowFrom }}", "--slave=yes", "--dnsupdate={{ .Values.pdns.dnsupdate.enabled }}", "--local-port=5300"]
+          args: ["--api={{ .Values.pdns.api.enabled }}", "--api-key={{ .Values.pdns.api.key }}", "--webserver=yes", "--webserver-port=8081", "--webserver-address=0.0.0.0", "--webserver-allow-from={{ .Values.pdns.webserver.allowFrom }}", "--slave=yes", "--dnsupdate={{ .Values.pdns.dnsupdate.enabled }}", "--local-port=5300", "--log-dns-queries", "--loglevel=5"]
           env:
               - name: MYSQL_HOST
               {{- if or (empty .Values.mariadb.serviceDiscovery) (eq .Values.mariadb.serviceDiscovery "dns") }}
@@ -62,8 +62,14 @@ spec:
           env:
               - name: PDNS_forward_zones
                 value: "cluster.local=127.0.0.1:5300"
-              - name: PDNS_packetcache_ttl
+              # - name: PDNS_packetcache_ttl
+              #   value: "15"
+              - name: PDNS_max_negative_ttl
                 value: "15"
+              - name: PDNS_root_nx_trust
+                value: "no"
+              - name: PDNS_trace
+                value: "yes"
           ports:
             - name: dns-udp
               containerPort: 53
